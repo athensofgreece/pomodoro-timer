@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <link rel="stylesheet" href="pomodoro-timer.css"> 
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+    <div class="container">
+        <h1>POMODORO TIMER</h1>
+        
+        <div class="app-sections">
+            <!-- Timer and Analytics -->
+            <div class="timer-section-container">
+                <div class="timer" id="timer">25:00</div>
+                
+                <div class="buttons">
+                    <button class="btn" id="startBtn">Start</button>
+                    <button class="btn" id="pauseBtn">Pause</button>
+                    <button class="btn" id="restartBtn">Reset</button>
+                    <div class="dropdown">
+                        <button class="btn active" id="workBtn">Work <span id="dropdownIcon">▼</span></button>
+                        <div class="dropdown-content" id="modeDropdown">
+                            <a id="workOption">Work</a>
+                            <a id="shortBreakOption">Short Break</a>
+                            <a id="longBreakOption">Long Break</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timer-section">
+                    <div class="slider-container">
+                        <input type="range" min="1" max="60" value="25" class="slider" id="timerSlider">
+                    </div>
+                </div>
+                
+                <div class="analytics">
+                    <div>Analytics:</div>
+                    <div>
+                        <div>Total Focus Time:</div>
+                        <div id="totalFocusTime">00:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound notification -->
+    <audio id="endSound" src="iPhone Radar Alarm_Ringtone (Apple Sound) - Sound Effect for Editing-yt.savetube.me.mp3" preload="auto"></audio>
+
+    <script src="pomodoro-timer.js"></script>
+</body>
+</html>
