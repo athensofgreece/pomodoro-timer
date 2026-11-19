@@ -1,28 +1,31 @@
 # Pomodoro Timer
 
-A calm, distraction-free Pomodoro timer. Pick a focus or break session, press one button, and watch the ring count down.
+A dark, neon Pomodoro timer for focused work. Pick a task, press one button, and let the glowing ring count down. It tracks your sessions, builds a focus cycle, and keeps a daily goal and streak.
 
 **Live demo:** https://athensofgreece.github.io/pomodoro-timer/
 
+![Pomodoro Timer screenshot](screenshot.png)
+
 ## Features
 
-- **Three session types:** Focus (25 min), Short break (5 min), Long break (15 min).
-- **Adjustable length:** a slider sets any session from 1 to 60 minutes.
-- **One main button:** Start, Pause and Resume share one control, with Reset beside it.
-- **Progress ring:** shows the time left at a glance. The ring turns green during breaks.
-- **Daily totals:** running focus time and number of completed sessions.
-- **End-of-session alert:** a short sound and an on-screen message, with no blocking pop-up.
-- **Time in the tab title:** keep an eye on the countdown while you work in another tab.
-- **Light and dark themes:** follows your system setting, and remembers your choice.
-- **Accessible:** keyboard friendly, visible focus outlines, screen-reader labels, and reduced-motion support.
+- **Focus and break modes:** Focus (25 min), Short break (5 min), Long break (15 min), with a slider for any length from 1 to 60 minutes.
+- **Task list:** add tasks, tap one to make it your current task, and see how many sessions each task took.
+- **4-session cycle:** four dots track your focus sessions. After the fourth, you get a long break.
+- **Auto-start:** an optional switch that starts the next session for you.
+- **Ambient sound:** rain, waves, or brown noise, generated in the browser with the Web Audio API. No audio files needed.
+- **Daily goal and streak:** set a session goal for the day and keep a streak of days you hit it.
+- **Remembers everything:** tasks, goal, streak and settings are saved in your browser.
+- **Accessible:** keyboard friendly, visible focus outlines, screen-reader labels, large touch targets and reduced-motion support.
 
 ## Tech
 
-HTML, CSS and vanilla JavaScript. There is no build step and no dependencies. The font is Plus Jakarta Sans from Google Fonts.
+HTML, CSS and vanilla JavaScript. No build step and no dependencies. Fonts: Space Grotesk and Inter from Google Fonts.
 
 ## How it works
 
-The countdown stores an end timestamp and recalculates the remaining time on every tick, instead of subtracting one second per interval. That keeps the timer accurate even if the browser throttles a background tab. Focus time is counted only while a Focus session is running.
+- **Accurate countdown:** the timer stores an end timestamp and recalculates the time left on every tick, so it stays correct even when the browser slows a background tab.
+- **Generated sound:** rain is filtered white noise. Waves and brown noise are low-passed noise, and waves add a slow volume swell.
+- **Saved data:** state is stored in `localStorage` as one JSON object, with each day's sessions, focus time and goal status keyed by date.
 
 ## Run it locally
 
@@ -37,8 +40,8 @@ Open `index.html` in your browser. No server needed.
 
 ```text
 ├── index.html           # Page structure
-├── pomodoro-timer.css   # Theme tokens, layout, components
-├── pomodoro-timer.js    # Timer logic and theme toggle
+├── pomodoro-timer.css   # Design tokens, layout, components
+├── pomodoro-timer.js    # Timer, tasks, cycle, goal, streak, ambient sound
 └── alarm.mp3            # End-of-session sound
 ```
 
