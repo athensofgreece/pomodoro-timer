@@ -4,7 +4,7 @@ A dark, neon Pomodoro timer for focused work. Pick a task, press one button, and
 
 **Live demo:** https://athensofgreece.github.io/pomodoro-timer/
 
-![Pomodoro Timer screenshot](screenshot.png)
+![Pomodoro Timer screenshot](timer-screenshot.png)
 
 ## Features
 
