@@ -1,140 +1,90 @@
-// Theme toggling
-const themeToggle = document.getElementById('themeToggle');
-const body = document.body;
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const root = document.documentElement;
+  const el = { time: $('timer'), state: $('state'), bar: $('bar'), start: $('startBtn'), reset: $('restartBtn'),
+    slider: $('timerSlider'), lengthOut: $('lengthOut'), focus: $('totalFocusTime'), sessions: $('sessions'),
+    sound: $('endSound'), announce: $('announce'), theme: $('themeToggle') };
+  const modes = [...document.querySelectorAll('.mode')];
+  const C = 2 * Math.PI * 90;
+  const LABEL = { work: 'Focus', shortBreak: 'Short break', longBreak: 'Long break' };
 
-themeToggle.addEventListener('click', () => {
-    if (body.getAttribute('data-theme') === 'dark') {
-        body.removeAttribute('data-theme');
-        themeToggle.textContent = '🌙';
-    } else {
-        body.setAttribute('data-theme', 'dark');
-        themeToggle.textContent = '☀️';
-    }
-});
+  let mode = 'work', totalSec = 25 * 60, remaining = totalSec;
+  let running = false, endAt = 0, tickId = null, lastTick = 0, focusMs = 0, done = 0;
 
-// Timer functionality
-const timer = document.getElementById('timer');
-const startBtn = document.getElementById('startBtn');
-const pauseBtn = document.getElementById('pauseBtn');
-const restartBtn = document.getElementById('restartBtn');
-const workBtn = document.getElementById('workBtn');
-const timerSlider = document.getElementById('timerSlider');
-const totalFocusTime = document.getElementById('totalFocusTime');
-const dropdownContent = document.getElementById('modeDropdown');
-const endSound = document.getElementById('endSound');
+  const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-let countdown;
-let remainingTime = 25 * 60; // 25 minutes in seconds
-let isRunning = false;
-let focusTimeSeconds = 0;
-let focusTimer;
-let currentMode = 'work';
+  function render() {
+    el.time.textContent = mmss(remaining);
+    el.bar.style.strokeDashoffset = C * (1 - remaining / totalSec);
+    el.focus.textContent = mmss(Math.floor(focusMs / 1000));
+    el.sessions.textContent = done;
+    el.start.textContent = running ? 'Pause' : remaining < totalSec && remaining > 0 ? 'Resume' : 'Start';
+    document.title = `${mmss(remaining)} · ${LABEL[mode]}`;
+  }
 
-function updateDisplay() {
-    const minutes = Math.floor(remainingTime / 60);
-    const seconds = remainingTime % 60;
-    timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
+  function tick() {
+    const now = Date.now();
+    if (mode === 'work') focusMs += now - lastTick;
+    lastTick = now;
+    remaining = Math.max(0, Math.ceil((endAt - now) / 1000));
+    if (remaining === 0) return finish();
+    render();
+  }
 
-function updateFocusTimeDisplay() {
-    const minutes = Math.floor(focusTimeSeconds / 60);
-    const seconds = focusTimeSeconds % 60;
-    totalFocusTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
+  function start() {
+    if (running || remaining === 0) return;
+    running = true; lastTick = Date.now(); endAt = lastTick + remaining * 1000;
+    tickId = setInterval(tick, 250);
+    el.state.textContent = mode === 'work' ? 'Stay with one task' : 'Rest your eyes';
+    render();
+  }
 
-function setMode(mode, minutes) {
-    currentMode = mode;
-    pauseTimer();
+  function pause(label = 'Paused') {
+    if (!running) return;
+    clearInterval(tickId); running = false;
+    el.state.textContent = label; render();
+  }
 
-    if (mode === 'work') {
-        workBtn.innerHTML = 'Work <span id="dropdownIcon">▼</span>';
-    } else if (mode === 'shortBreak') {
-        workBtn.innerHTML = 'Short Break <span id="dropdownIcon">▼</span>';
-    } else {
-        workBtn.innerHTML = 'Long Break <span id="dropdownIcon">▼</span>';
-    }
+  function finish() {
+    clearInterval(tickId); running = false;
+    if (mode === 'work') done++;
+    const msg = mode === 'work' ? 'Focus session complete. Take a break.' : 'Break over. Ready for the next session?';
+    el.state.textContent = msg; el.announce.textContent = msg;
+    el.sound.currentTime = 0; el.sound.play().catch(() => {});
+    render();
+  }
 
-    timerSlider.value = minutes;
-    remainingTime = minutes * 60;
-    updateDisplay();
+  function reset() {
+    pause(); clearInterval(tickId);
+    remaining = totalSec = parseInt(el.slider.value, 10) * 60;
+    el.state.textContent = mode === 'work' ? 'Ready to focus' : 'Ready for a break';
+    render();
+  }
 
-    dropdownContent.classList.remove('show');
-}
+  function setMode(next, minutes) {
+    pause(); mode = next; root.dataset.mode = next;
+    modes.forEach((b) => { const on = b.dataset.mode === next; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on); });
+    el.slider.value = minutes; el.lengthOut.textContent = `${minutes} min`;
+    reset();
+  }
 
-function startTimer() {
-    if (isRunning) return;
+  function setTheme(t) {
+    root.dataset.theme = t;
+    el.theme.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    try { localStorage.setItem('pomodoro-theme', t); } catch (e) {}
+  }
 
-    isRunning = true;
+  el.start.addEventListener('click', () => (running ? pause() : start()));
+  el.reset.addEventListener('click', reset);
+  modes.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode, +b.dataset.min)));
+  el.slider.addEventListener('input', () => {
+    el.lengthOut.textContent = `${el.slider.value} min`;
+    if (!running) { remaining = totalSec = el.slider.value * 60; render(); }
+  });
+  el.theme.addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
 
-    countdown = setInterval(() => {
-        if (remainingTime <= 0) {
-            clearInterval(countdown);
-            isRunning = false;
-            alert('Time is up!');
-            endSound.play(); // Play sound when timer ends
-            return;
-        }
-
-        remainingTime--;
-        updateDisplay();
-    }, 1000);
-
-    if (currentMode === 'work') {
-        focusTimer = setInterval(() => {
-            focusTimeSeconds++;
-            updateFocusTimeDisplay();
-        }, 1000);
-    }
-}
-
-function pauseTimer() {
-    if (!isRunning) return;
-
-    clearInterval(countdown);
-    if (currentMode === 'work') {
-        clearInterval(focusTimer);
-    }
-    isRunning = false;
-}
-
-function restartTimer() {
-    pauseTimer();
-    remainingTime = parseInt(timerSlider.value) * 60;
-    updateDisplay();
-}
-
-timerSlider.addEventListener('input', () => {
-    if (!isRunning) {
-        remainingTime = parseInt(timerSlider.value) * 60;
-        updateDisplay();
-    }
-});
-
-startBtn.addEventListener('click', startTimer);
-pauseBtn.addEventListener('click', pauseTimer);
-restartBtn.addEventListener('click', restartTimer);
-
-workBtn.addEventListener('click', () => {
-    dropdownContent.classList.toggle('show');
-});
-
-window.addEventListener('click', (event) => {
-    if (!event.target.matches('#workBtn') && !event.target.matches('#dropdownIcon')) {
-        dropdownContent.classList.remove('show');
-    }
-});
-
-workOption.addEventListener('click', () => {
-    setMode('work', 25);
-});
-
-shortBreakOption.addEventListener('click', () => {
-    setMode('shortBreak', 5);
-});
-
-longBreakOption.addEventListener('click', () => {
-    setMode('longBreak', 15);
-});
-
-updateDisplay();
-updateFocusTimeDisplay();
+  let saved = null; try { saved = localStorage.getItem('pomodoro-theme'); } catch (e) {}
+  setTheme(saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  root.dataset.mode = 'work';
+  render();
+})();
